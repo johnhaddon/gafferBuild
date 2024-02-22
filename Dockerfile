@@ -67,6 +67,17 @@ RUN yum install -y 'dnf-command(versionlock)' && \
 	ln -s /opt/inkscape-1.3.2/squashfs-root/AppRun /usr/local/bin/inkscape && \
 	cd - && \
 #
+# Trim out a few things we don't need. We inherited a lot more than we need from
+# `aswf/ci-base`, and we run out of disk space on GitHub Actions if our container
+# is too big. A particular offender is CUDA, which comes with all sorts of
+# bells and whistles we don't need, and is responsible for at least 5Gb of the
+# total image size.
+	rm -rf /var/opt/sonar-scanner-4.8.0.2856-linux && \
+	dnf remove -y \
+		cuda-nsight-compute-11-8.x86_64 \
+		libcublas-devel-11-8-11.11.3.6-1.x86_64 && \
+	dnf clean all && \
+#
 # Now we've installed all our packages, update yum-versionlock for all the
 # new packages so we can copy the versionlock.list out of the container when we
 # want to update the build env.
