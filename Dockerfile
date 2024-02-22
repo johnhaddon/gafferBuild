@@ -2,7 +2,12 @@
 # the glibc requirements of VFXPlatform 2023 (2.28 or lower), with many of our
 # build dependencies already pre-installed.
 
-FROM aswf/ci-base:2023.2 as build
+FROM aswf/ci-base:2023.2
+
+# Identify the build environment. This can be used by build processes for
+# environment specific behaviour such as naming artifacts built from this
+# container.
+ENV GAFFER_BUILD_ENVIRONMENT="gcc11"
 
 # As we don't want to inadvertently grab newer versions of our yum-installed
 # packages, we use yum-versionlock to keep them pinned. We track the list of
@@ -80,14 +85,6 @@ RUN yum install -y 'dnf-command(versionlock)' && \
 # correct version will already be installed and we just ignore this...
 	./versionlock.sh lock-new /tmp/packages
 
-# The trimming we did above won't actually make our image any smaller, because
-# it is composed from layers, and the base layer still contains the original
-# files. Flatten the result into a new single-layer image so we actually end up
-# with something smaller.
-
-FROM scratch
-COPY --from=build / /
-
 # Set WORKDIR back to / to match the behaviour of our CentOS 7 Dockerfile.
 # This makes it easier to deal with copying build artifacts as they will be
 # in the same location in both containers.
@@ -102,14 +99,3 @@ ENV _INKSCAPE_GC="disable"
 
 # Make the Optix SDK available for Cycles builds.
 ENV OPTIX_ROOT_DIR=/usr/local/NVIDIA-OptiX-SDK-7.3.0
-
-# Identify the build environment. This can be used by build processes for
-# environment specific behaviour such as naming artifacts built from this
-# container.
-ENV GAFFER_BUILD_ENVIRONMENT="gcc11"
-
-# Restore the entry point from the base image, since that was lost when
-# we flattened the image.
-ENTRYPOINT /opt/nvidia/nvidia_entrypoint.sh
-
-RUN export MYVAR=HELLOO
