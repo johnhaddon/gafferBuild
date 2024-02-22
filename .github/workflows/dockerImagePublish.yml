@@ -21,10 +21,8 @@ jobs:
 
     - name: Free disk space
       run: |
-        du -sh /*
         df -H
         apt-get clean
-        du -sh /*
         df -H
 
     - name: Build the container image
