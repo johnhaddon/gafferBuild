@@ -21,10 +21,10 @@ jobs:
 
     - name: Free disk space
       run: |
-        du -sh "/*"
+        du -sh /*
         df -H
         apt-get clean
-        du -sh "/*"
+        du -sh /*
         df -H
 
     - name: Build the container image
