@@ -1,6 +1,9 @@
-name: Docker Image Publish
+name: Image Publish
 
 on:
+  push:
+    branches:
+      - '*'
   release:
     types: [published]
 
@@ -16,21 +19,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag image
+    - name: Build the container image
+      run: buildah build --file Dockerfile --tag image --layers=false --squash
 
     - name: Log into registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      #run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+      run: echo "${{ secrets.GITHUB_TOKEN }} | podman login --username ${{ github.actor }} --password-stdin ghcr.io
 
-    - name: Push image
-      run: |
-        # Image ID must be lowercase
-        IMAGE_ID=docker.pkg.github.com/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')/$IMAGE_NAME
-        # Strip git ref prefix from version
-        VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
+    # - name: Push image
+    #   run: |
+    #     # Image ID must be lowercase
+    #     IMAGE_ID=docker.pkg.github.com/$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')/$IMAGE_NAME
+    #     # Strip git ref prefix from version
+    #     VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
 
-        echo IMAGE_ID=$IMAGE_ID
-        echo VERSION=$VERSION
+    #     echo IMAGE_ID=$IMAGE_ID
+    #     echo VERSION=$VERSION
 
-        docker tag image $IMAGE_ID:$VERSION
-        docker push $IMAGE_ID:$VERSION
+    #     docker tag image $IMAGE_ID:$VERSION
+    #     docker push $IMAGE_ID:$VERSION
